@@ -1,26 +1,11 @@
 -- Databricks notebook source
+-------To check what te=he data looks like------
 
 select * from `tv_data`.`dataset_tv_casestudy`.`user_profiles` limit 100;
 
-SELECT DISTINCT Gender
-FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
-
-SELECT DISTINCT
-CASE 
-WHEN Gender = 'None' THEN 'unkown'
-WHEN Gender = ' ' THEN 'unkown'
-ELSE Gender
-FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
 
 
 --------------------------------------------------------------
-
-
-
--- I wanted to see the whole table before I start doing any analysis on it
-SELECT*
-FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
-LIMIT 10;
 -- checking for duplicates in my data
 
 SELECT UserID,
@@ -28,7 +13,17 @@ SELECT UserID,
 FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
 GROUP BY UserID
 HAVING COUNT(*) > 1;
--- I am checking the size pf the data
+
+----- Gender Checks---------------
+
+SELECT DISTINCT
+CASE 
+WHEN Gender = 'None' THEN 'unknown'------ Replace the value none wih unknown
+WHEN Gender = ' ' THEN 'unknown' ------Replaces empty space with unknown
+WHEN Gender IS NULL THEN 'unknown'----- Repalaces null with unkown
+ELSE Gender------- if gender is male or female return as it is
+END AS Gender
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
 
 
 SELECT COUNT(*) AS number_of_rows,
@@ -42,40 +37,29 @@ WHERE UserID IS NULL;
 
 SELECT DISTINCT UserID
 FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
----------------------------------------------------------
---Gender Checks
----------------------------------------------------------
-SELECT DISTINCT gender
-FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
 
-SELECT COUNT(*)
-FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
-WHERE gender=' ';
-
-SELECT
- COUNT(DISTINCT userid) AS subs,
- CASE
- WHEN gender =' ' THEN 'None'
- ELSE gender
- END AS Gender
-FROM workspace.default.bright_tv_user_profiles
-GROUP BY Gender;
 ---------------------------------------------------------
 --Race Checks
 ---------------------------------------------------------
-SELECT COUNT(*) AS num_rows
-FROM workspace.default.bright_tv_user_profiles
-WHERE Race IS NULL;
-SELECT DISTINCT Race
-FROM workspace.default.bright_tv_user_profiles;
-SELECT DISTINCT
- CASE
 
- WHEN Race='other' THEN 'None'
- WHEN Race=' ' THEN 'None'
- ELSE Race
+SELECT DISTINCT Race
+FROM  `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
+
+SELECT COUNT(*) AS Numb_of_rows
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
+WHERE Race IS NULL; ----------Checking all the race rows that shw a null value
+
+SELECT COUNT(DISTINCT UserID) AS subs,
+ CASE
+ 
+ WHEN Race='other' THEN 'Unkown' -----Replaces other with unknown
+ WHEN Race='None' THEN 'Unkown' -----Replaces None with unknown
+ WHEN Race= ' ' THEN 'None'-------- Replaces empty space with unknown
+ WHEN Race IS NULL THEN 'Unknown' -----Replaces NULL with unknown
+ ELSE Race ----- Keeps others races as is
 END AS Race
-FROM workspace.default.bright_tv_user_profiles;
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
+GROUP BY Race;
 ---------------------------------------------------------
 --Province Checks
 ---------------------------------------------------------
@@ -84,121 +68,38 @@ SELECT DISTINCT
  CASE
  WHEN Province=' ' THEN 'Uncategorized'
  WHEN Province='None' THEN 'Uncategorized'
+ WHEN Province IS NULL THEN 'Uncategorized'
  ELSE Province
  END AS Region
-FROM workspace.default.bright_tv_user_profiles;
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
 ---------------------------------------------------------
 --Age
 ---------------------------------------------------------
-SELECT MIN(Age) AS min_age, --- = 0
- MAX(Age) AS max_age -- = 114
-FROM workspace.default.bright_tv_user_profiles;
+SELECT MIN(Age) AS min_age, --- Youngest person in the data = 0
+       MAX(Age) AS max_age, -- = Oldest person in the data = 114
+       AVG(Age) AS Mean_age
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
 
 SELECT COUNT(*) AS cnt
-FROM workspace.default.bright_tv_user_profileS
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
 WHERE age IS NULL;
-==========================================================================================
-WITH user_profiles AS (
-SELECT UserID,
- CASE
- WHEN Province=' ' THEN 'Uncategorized'
- WHEN Province='None' THEN 'Uncategorized'
- ELSE Province
- END AS Region,
- age,
- CASE
- WHEN age = 0 THEN 'Infants'
- WHEN age BETWEEN 1 AND 12 THEN 'Kids'
- WHEN age BETWEEN 13 AND 19 THEN 'Teenager'
- WHEN age BETWEEN 20 AND 35 THEN 'Youth'
- WHEN age BETWEEN 36 AND 50 THEN 'Adult'
- WHEN age BETWEEN 51 AND 65 THEN 'Elder'
- WHEN age >65 THEN 'Pensioner'
- END AS age_groups,
- CASE
- WHEN (email IS NOT NULL )OR (email=' ') OR (email NOT IN ('None'))THEN 1
- ELSE 0
- END AS email_flag,
- CASE
- WHEN `Social Media Handle` IS NOT NULL OR `Social Media Handle`=' ' OR `Social Media
-Handle` NOT IN ('None')THEN 1
- ELSE 0
- END AS sm_flag,
- CASE
- WHEN Race='other' THEN 'None'
- WHEN Race=' ' THEN 'None'
- ELSE Race
- END AS Race,
- CASE
- WHEN gender =' ' THEN 'None'
- ELSE gender
- END AS Gender
-FROM workspace.default.bright_tv_user_profiles
-),viewership AS (
- 
- SELECT
- COALESCE(UserID0,userid4) AS userid,
- TO_CHAR(RecordDate2, 'yyyyMM') AS month_id,
- TO_DATE(RecordDate2) AS watch_date,
- --TIME(RecordDate2) AS watch_time,
- TO_CHAR(RecordDate2, 'DD') AS day_of_week,
- DAYNAME(RecordDate2) AS day_name,
- CASE
- WHEN day_name IN ('Sat', 'Sun') THEN 'weekend'
- ELSE 'weekday'
- END AS day_classification,
- MONTHNAME(RecordDate2) AS month_name,
- CASE
- WHEN Channel2 IN ('SawSee','Sawsee') THEN 'SawSee'
- WHEN Channel2 IN ('SuperSport Live Events','Live on SuperSport', 'Supersport Live Events',
-'DStv Events 1') THEN 'Live Events'
- ELSE Channel2
- END AS Tv_channel,
- date_format(RecordDate2, 'HH:mm:ss') AS watch_time,
- CASE
- WHEN watch_time BETWEEN '00:00:00' AND '05:59:59' THEN '01. Midnight'
- WHEN watch_time BETWEEN '06:00:00' AND '11:59:59' THEN '02. Morning'
- WHEN watch_time BETWEEN '12:00:00' AND '16:59:59' THEN '03. Afternoon'
- WHEN watch_time BETWEEN '17:00:00' AND '23:59:59' THEN '04. Evening'
- END AS time_of_day,
- DATE_FORMAT(`Duration 2`, 'HH:mm:ss') AS duration,
- CASE
- WHEN duration BETWEEN '00:05:00' AND '00:30:00' THEN '01. Low Usage: <30 min'
- WHEN duration BETWEEN '00:30:01' AND '00:59:59' THEN '02. Med Usage: <60 min'
- WHEN duration > '00:59:59' THEN '03. High Usage: >60 min'
- ELSE '04. No Usage'
- END AS screen_time_bucket,
- HOUR(RecordDate2) AS hour_of_day
-FROM workspace.default.bright_tv_viewership
-)
 
+SELECT
+    CASE
+        WHEN age = 0 THEN 'Infants'
+        WHEN age BETWEEN 1 AND 12 THEN 'Kids'
+        WHEN age BETWEEN 13 AND 19 THEN 'Teenager'
+        WHEN age BETWEEN 20 AND 35 THEN 'Youth'
+        WHEN age BETWEEN 36 AND 50 THEN 'Adult'
+        WHEN age BETWEEN 51 AND 65 THEN 'Elder'
+        WHEN age >65 THEN 'Pensioner'
+    END AS age_groups
+   FROM  `tv_data`.`dataset_tv_casestudy`.`user_profiles`;
 
-SELECT Coalesce(A.userid,B.userid) AS sub_id,
- month_id,
- watch_date,
- day_of_week,
- day_name,
- day_classification,
- month_name,
- Tv_channel,
- time_of_day,
- hour_of_day,
- screen_time_bucket,
- --user_flag,
- duration,
- Region,
- age_groups,
- email_flag,
- sm_flag,
- Race,
- Gender
-FROM viewership AS A
-LEFT JOIN user_profiles AS B
-ON A.userid=B.userid;
-------------------------------------------------------------------
-------------------------------------------------------------------------
---------------------------------------------------------------------------
-CREATE OR REPLACE TEMPORARY TABLE user_profiles AS (
+------------------------------------------
+---------Creating a temporary table to summarise users profiles----------
+
+CREATE OR REPLACE TEMPORARY TABLE user_profiles AS (  --------Creating a tempopary table
 
 SELECT UserID,
 
@@ -210,7 +111,7 @@ WHEN Province IS NULL THEN 'Uncategorized'
 ELSE Province
 END AS Region,
 
-age,
+Age,
 CASE
 WHEN age = 0 THEN 'Infants'
 WHEN age BETWEEN 1 AND 12 THEN 'Kids'
@@ -227,7 +128,7 @@ ELSE 0
 END AS email_flag,
 
 CASE
-WHEN Social Media Handle IS NOT NULL OR Social Media Handle=' ' OR Social Media Handle NOT IN ('None')THEN 1
+WHEN `Social Media Handle` IS NOT NULL OR `Social Media Handle`=' ' OR `Social Media Handle` NOT IN ('None')THEN 1
 ELSE 0
 END AS sm_flag,
 
@@ -242,8 +143,120 @@ WHEN gender =' ' THEN 'None'
 ELSE gender
 END AS Gender
 
-FROM workspace.default.bright_tv_user_profiles
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
 );
+
+---------------------- CTE BIG QUERY where two tables are joined---------------------
+
+WITH user_profiles AS (
+    SELECT UserID,
+        CASE
+            WHEN Province=' ' THEN 'Uncategorized'
+            WHEN Province='None' THEN 'Uncategorized'
+    ELSE Province
+ END AS Region,
+ 
+ age,
+    CASE
+        WHEN age = 0 THEN 'Infants'
+        WHEN age BETWEEN 1 AND 12 THEN 'Kids'
+        WHEN age BETWEEN 13 AND 19 THEN 'Teenager'
+        WHEN age BETWEEN 20 AND 35 THEN 'Youth'
+        WHEN age BETWEEN 36 AND 50 THEN 'Adult'
+        WHEN age BETWEEN 51 AND 65 THEN 'Elder'
+        WHEN age >65 THEN 'Pensioner'
+    END AS age_groups,
+
+ CASE
+    WHEN (email IS NOT NULL )OR (email=' ') OR (email NOT IN ('None'))THEN 1
+ ELSE 0
+ END AS email_flag,
+
+ CASE
+    WHEN `Social Media Handle` IS NOT NULL OR `Social Media Handle`=' ' OR `Social Media Handle` NOT IN ('None')THEN 1
+ ELSE 0
+ END AS sm_flag,
+
+ CASE
+    WHEN Race='other' THEN 'None'
+    WHEN Race=' ' THEN 'None'
+ ELSE Race
+ END AS Race,
+ 
+ CASE
+    WHEN gender =' ' THEN 'None'
+ ELSE gender
+ END AS Gender
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
+),viewership AS (
+ 
+ SELECT
+    COALESCE(UserID0,userid4) AS userid,
+        TO_CHAR(RecordDate2, 'yyyyMM') AS month_id,
+        TO_DATE(RecordDate2) AS watch_date,
+        --TIME(RecordDate2) AS watch_time,
+        TO_CHAR(RecordDate2, 'DD') AS day_of_week,
+    DAYNAME(RecordDate2) AS day_name,
+
+ CASE
+    WHEN day_name IN ('Sat', 'Sun') THEN 'weekend'
+ ELSE 'weekday'
+ END AS day_classification,
+ MONTHNAME(RecordDate2) AS month_name,
+ 
+ CASE
+    WHEN Channel2 IN ('SawSee','Sawsee') THEN 'SawSee'
+    WHEN Channel2 IN ('SuperSport Live Events','Live on SuperSport', 'Supersport Live Events',
+'DStv Events 1') THEN 'Live Events'
+ ELSE Channel2
+ END AS Tv_channel,
+ date_format(RecordDate2, 'HH:mm:ss') AS watch_time,
+
+ CASE
+    WHEN watch_time BETWEEN '00:00:00' AND '05:59:59' THEN '01. Midnight'
+    WHEN watch_time BETWEEN '06:00:00' AND '11:59:59' THEN '02. Morning'
+    WHEN watch_time BETWEEN '12:00:00' AND '16:59:59' THEN '03. Afternoon'
+    WHEN watch_time BETWEEN '17:00:00' AND '23:59:59' THEN '04. Evening'
+ END AS time_of_day,
+ DATE_FORMAT(`Duration 2`, 'HH:mm:ss') AS duration,
+ 
+ CASE
+    WHEN duration BETWEEN '00:05:00' AND '00:30:00' THEN '01. Low Usage: <30 min'
+    WHEN duration BETWEEN '00:30:01' AND '00:59:59' THEN '02. Med Usage: <60 min'
+    WHEN duration > '00:59:59' THEN '03. High Usage: >60 min'
+ ELSE '04. No Usage'
+ END AS screen_time_bucket,
+ HOUR(RecordDate2) AS hour_of_day
+FROM tv_data.dataset_tv_casestudy.viewership
+)
+
+SELECT 
+    Coalesce(A.userid,B.userid) AS sub_id,
+    month_id,
+    watch_date,
+    day_of_week,
+    day_name,
+    day_classification,
+    month_name,
+    Tv_channel,
+    time_of_day,
+    hour_of_day,
+    screen_time_bucket,
+    --user_flag,
+    duration,
+    Region,
+    age_groups,
+    email_flag,
+    sm_flag,
+    Race,
+    Gender
+FROM viewership AS A
+LEFT JOIN user_profiles AS B
+ON A.userid=B.userid;
+------------------------------------------------------------------
+------------------------------------------------------------------------
+--------------------------------------------------------------------------
+
 
 SELECT *
 FROM user_profiles;
@@ -288,7 +301,7 @@ END AS screen_time_bucket,
 
 HOUR(RecordDate2) AS hour_of_day
 
-FROM workspace.default.bright_tv_viewership);
+FROM tv_data.dataset_tv_casestudy.viewership);
 
 
 SELECT *
@@ -335,16 +348,7 @@ WHEN Province IS NULL THEN 'Uncategorized'
 ELSE Province
 END AS Region,
 
-age,
-CASE
-WHEN age = 0 THEN 'Infants'
-WHEN age BETWEEN 1 AND 12 THEN 'Kids'
-WHEN age BETWEEN 13 AND 19 THEN 'Teenager'
-WHEN age BETWEEN 20 AND 35 THEN 'Youth'
-WHEN age BETWEEN 36 AND 50 THEN 'Adult'
-WHEN age BETWEEN 51 AND 65 THEN 'Elder'
-WHEN age >65 THEN 'Pensioner'
-END AS age_groups,
+
 
 CASE
 WHEN (email IS NOT NULL )OR (email=' ') OR (email NOT IN ('None'))THEN 1
@@ -352,7 +356,7 @@ ELSE 0
 END AS email_flag,
 
 CASE
-WHEN Social Media Handle IS NOT NULL OR Social Media Handle=' ' OR Social Media Handle NOT IN ('None')THEN 1
+WHEN `Social Media Handle` IS NOT NULL OR `Social Media Handle`=' ' OR `Social Media Handle` NOT IN ('None')THEN 1
 ELSE 0
 END AS sm_flag,
 
@@ -367,7 +371,7 @@ WHEN gender =' ' THEN 'None'
 ELSE gender
 END AS Gender
 
-FROM workspace.default.bright_tv_user_profiles
+FROM `tv_data`.`dataset_tv_casestudy`.`user_profiles`
 ),
 viewership AS (
 SELECT
@@ -409,7 +413,7 @@ END AS screen_time_bucket,
 
 HOUR(RecordDate2) AS hour_of_day
 
-FROM workspace.default.bright_tv_viewership
+FROM tv_data.dataset_tv_casestudy.viewership
 )
 SELECT Coalesce(A.userid,B.userid) AS sub_id,
 month_id,
