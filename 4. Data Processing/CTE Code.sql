@@ -1,5 +1,4 @@
 -- Databricks notebook source
-
 WITH user_profiles AS (
 SELECT UserID,
 CASE
