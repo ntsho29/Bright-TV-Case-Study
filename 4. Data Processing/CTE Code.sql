@@ -156,7 +156,7 @@ FROM
             ELSE '04. No Usage'
         END AS screen_time_bucket,
         HOUR(RecordDate2) AS hour_of_day
-    FROM bright_tv.data.viewerships
+    FROM tv_data.dataset_tv_casestudy.viewership
 ) AS A
 
 LEFT JOIN
@@ -210,7 +210,7 @@ LEFT JOIN
             ELSE Gender
         END AS Gender
 
-    FROM bright_tv.data.user_profiles
+    FROM tv_data.dataset_tv_casestudy.user_profiles
 ) AS B
 
 ON A.userid = B.userid;
