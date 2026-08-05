@@ -253,6 +253,18 @@ SELECT
 FROM viewership AS A
 LEFT JOIN user_profiles AS B
 ON A.userid=B.userid;
+
+
+base_viewership AS (
+
+SELECT   COALESCE(UserID0, userId4),
+        from_utc_timestamp(RecordDate2, 'Africa/Johannesburg') AS RecordDate_SAST,
+	Channel2
+        `Duration 2`
+
+FROM viewership 
+------The code above just accounts for the timestamp conversion, it's easier to use a CTE. After this you can do your cleaning drawing data from it.
+
 ----------------------------------------------------------------
 -------------------------------------------------
 Practicing Joins
