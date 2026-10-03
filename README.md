@@ -1,5 +1,7 @@
 # Bright-TV-Case-Study
 
+# Lovable Dashboard https://channel-watchr.lovable.app
+
 ## 📖 Project Overview
 
 This project focuses on analysing Bright TV user and viewership data using SQL in Databricks. The project involved cleaning, transforming and preparing raw data for analysis by applying various SQL techniques. The objective was to produce reliable, well-structured data that can be used to answer business questions and support data-driven decision-making.
